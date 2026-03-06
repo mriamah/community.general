@@ -6,3 +6,5 @@ azp/posix/2
 destructive
 skip/python2
 skip/windows
+skip/freebsd
+skip/rhel
