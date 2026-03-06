@@ -5,5 +5,4 @@
 azp/posix/2
 destructive
 skip/python2
-skip/python3.8
 skip/windows
