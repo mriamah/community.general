@@ -227,7 +227,7 @@ class UV:
         latest_version_str, latest_path = self._get_latest_patch_release("--only-installed", "--managed-python")
         return True, out, err, rc, [latest_version_str], [latest_path]
 
-    def _exec(self, python_version: str, command, *args, check_rc=False) -> tuple[int, str, str]:
+    def _exec(self, python_version: str, command: str, *args, check_rc: bool = False) -> tuple[int, str, str]:
         """
         Execute a uv python subcommand.
         Args:
@@ -240,7 +240,7 @@ class UV:
         rc, out, err = self.module.run_command(cmd, check_rc=check_rc)
         return rc, out, err
 
-    def _find_python(self, *args, check_rc=False) -> tuple[int, str, str]:
+    def _find_python(self, *args, check_rc: bool = False) -> tuple[int, str, str]:
         """
         Runs command 'uv python find' which returns path of installed patch releases for a given python version.
         If multiple patch versions are installed, "uv python find" returns the one used by default
@@ -254,7 +254,7 @@ class UV:
             out = out.strip()
         return rc, out, err
 
-    def _list_python(self, *args, check_rc=False) -> tuple[int, list, str]:
+    def _list_python(self, *args, check_rc: bool = False) -> tuple[int, list, str]:
         """
         Runs command 'uv python list' (which returns list of installed patch releases for a given python version).
         Official documentation https://docs.astral.sh/uv/reference/cli/#uv-python-list
@@ -308,7 +308,7 @@ class UV:
             return [result.get("version") for result in results], [result.get("path") for result in results]
         return [], []
 
-    def _filter_valid_versions(self, results):
+    def _filter_valid_versions(self, results: list):
         valid_results = []
         for result in results:
             version = result.get("version", "")
@@ -320,7 +320,7 @@ class UV:
         return valid_results
 
     @staticmethod
-    def _parse_version(version_str):
+    def _parse_version(version_str: str):
         try:
             return StrictVersion(version_str)
         except ValueError:
