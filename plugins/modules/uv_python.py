@@ -111,6 +111,7 @@ rc:
 
 import json
 import re
+from pathlib import Path
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.compat.version import LooseVersion, StrictVersion
@@ -265,9 +266,13 @@ class UV:
         pythons_installed = []
         try:
             pythons_installed = json.loads(out)
+            # convert path to absolute path since in some recent uv releases "uv python list" returns relative install paths instead of absolute paths
+            for result in pythons_installed:
+                path = result.get("path", "")
+                if path and not Path(path).is_absolute():
+                    result["path"] = str(Path(path).resolve())
         except json.decoder.JSONDecodeError:
-            # This happens when no version is found
-            pass
+            self.module.debug("No Python installation found.")
         return rc, pythons_installed, err
 
     def _get_latest_patch_release(self, *args) -> tuple[str, str]:
