@@ -37,8 +37,8 @@
 - name: Verify Python 3.14 installation in check mode
   assert:
     that:
-      - install_check_mode.changed == check_python_314_exists.failed
-      - install_check_mode.failed is false
+      - (install_check_mode is changed) == (check_python_314_exists is failed)
+      - install_check_mode is not failed
       - install_check_mode.python_versions | length >= 1
 
 - name: Install Python 3.14
