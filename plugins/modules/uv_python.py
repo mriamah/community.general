@@ -311,7 +311,7 @@ class UV:
                 result["parsed_version"] = StrictVersion(version)
                 valid_results.append(result)
             except ValueError:
-                self.module.debug(f"Found {version} available, but it's not yet supported by uv_python module.")
+                self.module.debug(f"Found {version!r} available, but it's not yet supported by uv_python module.")
         return valid_results
 
     @staticmethod
