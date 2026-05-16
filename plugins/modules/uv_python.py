@@ -151,7 +151,9 @@ class UV:
                     required_version=MINIMUM_UV_VERSION,
                 )
         except AttributeError:
-            self.module.warn("Could not get installed uv version, skipping uv version check")
+            self.module.warn(
+                "Could not get installed uv version, skipping uv version check"
+            )
 
     def install_python(self) -> tuple[bool, str, str, int, list[str], list[str]]:
         """
@@ -170,13 +172,19 @@ class UV:
             dummy_rc, version_path, dummy_err = self._find_python()
             return False, "", "", 0, [existing_version], [version_path]
         if self.module.check_mode:
-            latest_version, dummy_path = self._get_latest_patch_release("--managed-python")
+            latest_version, dummy_path = self._get_latest_patch_release(
+                "--managed-python"
+            )
             # when uv does not find any available patch version the install command will fail
             if not latest_version:
-                self.module.fail_json(msg=(f"Version {self.python_version_str} is not available."))
+                self.module.fail_json(
+                    msg=(f"Version {self.python_version_str} is not available.")
+                )
             return True, "", "", 0, [latest_version], [""]
         rc, out, err = self._exec(self.python_version_str, "install", check_rc=True)
-        latest_version, path = self._get_latest_patch_release("--only-installed", "--managed-python")
+        latest_version, path = self._get_latest_patch_release(
+            "--only-installed", "--managed-python"
+        )
         return True, out, err, rc, [latest_version], [path]
 
     def uninstall_python(self) -> tuple[bool, str, str, int, list, list]:
@@ -192,7 +200,9 @@ class UV:
           - list of uninstalled versions
           - list of previous installation paths for each uninstalled version
         """
-        installed_versions, install_paths = self._get_installed_versions("--managed-python")
+        installed_versions, install_paths = self._get_installed_versions(
+            "--managed-python"
+        )
         if not installed_versions:
             return False, "", "", 0, [], []
         if self.module.check_mode:
@@ -213,9 +223,13 @@ class UV:
         """
         rc, installed_version_str, dummy_err = self._find_python("--show-version")
         installed_version = self._parse_version(installed_version_str)
-        latest_version_str, dummy_path = self._get_latest_patch_release("--managed-python")
+        latest_version_str, dummy_path = self._get_latest_patch_release(
+            "--managed-python"
+        )
         if not latest_version_str:
-            self.module.fail_json(msg=f"Version {self.python_version_str} is not available.")
+            self.module.fail_json(
+                msg=f"Version {self.python_version_str} is not available."
+            )
         if rc == 0 and installed_version >= StrictVersion(latest_version_str):
             dummy_rc, install_path, dummy_err = self._find_python()
             return False, "", "", rc, [installed_version_str], [install_path]
@@ -224,10 +238,14 @@ class UV:
         # it's possible to have latest version already installed but not used as default
         # so in this case 'uv python install' will set latest version as default
         rc, out, err = self._exec(latest_version_str, "install", check_rc=True)
-        latest_version_str, latest_path = self._get_latest_patch_release("--only-installed", "--managed-python")
+        latest_version_str, latest_path = self._get_latest_patch_release(
+            "--only-installed", "--managed-python"
+        )
         return True, out, err, rc, [latest_version_str], [latest_path]
 
-    def _exec(self, python_version: str, command: str, *args, check_rc: bool = False) -> tuple[int, str, str]:
+    def _exec(
+        self, python_version: str, command: str, *args, check_rc: bool = False
+    ) -> tuple[int, str, str]:
         """
         Execute a uv python subcommand.
         Args:
@@ -236,7 +254,15 @@ class UV:
           *args: Additional positional arguments passed to the command.
           check_rc (bool): Whether to fail if the command exits with non-zero return code.
         """
-        cmd = [self.bin_path, "python", command, python_version, "--color", "never", *args]
+        cmd = [
+            self.bin_path,
+            "python",
+            command,
+            python_version,
+            "--color",
+            "never",
+            *args,
+        ]
         rc, out, err = self.module.run_command(cmd, check_rc=check_rc)
         return rc, out, err
 
@@ -249,7 +275,9 @@ class UV:
           *args: Additional positional arguments passed to _exec.
           check_rc (bool): Whether to fail if the command exits with non-zero return code.
         """
-        rc, out, err = self._exec(self.python_version_str, "find", *args, check_rc=check_rc)
+        rc, out, err = self._exec(
+            self.python_version_str, "find", *args, check_rc=check_rc
+        )
         if rc == 0:
             out = out.strip()
         return rc, out, err
@@ -262,7 +290,14 @@ class UV:
           *args: Additional positional arguments passed to _exec.
           check_rc (bool): Whether to fail if the command exits with non-zero return code.
         """
-        rc, out, err = self._exec(self.python_version_str, "list", "--output-format", "json", *args, check_rc=check_rc)
+        rc, out, err = self._exec(
+            self.python_version_str,
+            "list",
+            "--output-format",
+            "json",
+            *args,
+            check_rc=check_rc,
+        )
         pythons_installed = []
         try:
             pythons_installed = json.loads(out)
@@ -305,7 +340,9 @@ class UV:
         """
         dummy_rc, results, dummy_err = self._list_python("--only-installed", *args)
         if results:
-            return [result.get("version") for result in results], [result.get("path") for result in results]
+            return [result.get("version") for result in results], [
+                result.get("path") for result in results
+            ]
         return [], []
 
     def _filter_valid_versions(self, results: list):
@@ -316,7 +353,9 @@ class UV:
                 result["parsed_version"] = StrictVersion(version)
                 valid_results.append(result)
             except ValueError:
-                self.module.debug(f"Found {version!r} available, but it's not yet supported by uv_python module.")
+                self.module.debug(
+                    f"Found {version!r} available, but it's not yet supported by uv_python module."
+                )
         return valid_results
 
     @staticmethod
@@ -331,22 +370,68 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             version=dict(type="str", required=True),
-            state=dict(type="str", default="present", choices=["present", "absent", "latest"]),
+            state=dict(
+                type="str", default="present", choices=["present", "absent", "latest"]
+            ),
         ),
         supports_check_mode=True,
     )
 
-    result = dict(changed=False, stdout="", stderr="", rc=0, python_versions=[], python_paths=[], failed=False)
+    result = dict(
+        changed=False,
+        stdout="",
+        stderr="",
+        rc=0,
+        python_versions=[],
+        python_paths=[],
+        failed=False,
+    )
     state = module.params["state"]
     exec_result = {}
     uv = UV(module)
 
     if state == "present":
-        exec_result = dict(zip(["changed", "stdout", "stderr", "rc", "python_versions", "python_paths"], uv.install_python()))
+        exec_result = dict(
+            zip(
+                [
+                    "changed",
+                    "stdout",
+                    "stderr",
+                    "rc",
+                    "python_versions",
+                    "python_paths",
+                ],
+                uv.install_python(),
+            )
+        )
     elif state == "absent":
-        exec_result = dict(zip(["changed", "stdout", "stderr", "rc", "python_versions", "python_paths"], uv.uninstall_python()))
+        exec_result = dict(
+            zip(
+                [
+                    "changed",
+                    "stdout",
+                    "stderr",
+                    "rc",
+                    "python_versions",
+                    "python_paths",
+                ],
+                uv.uninstall_python(),
+            )
+        )
     elif state == "latest":
-        exec_result = dict(zip(["changed", "stdout", "stderr", "rc", "python_versions", "python_paths"], uv.upgrade_python()))
+        exec_result = dict(
+            zip(
+                [
+                    "changed",
+                    "stdout",
+                    "stderr",
+                    "rc",
+                    "python_versions",
+                    "python_paths",
+                ],
+                uv.upgrade_python(),
+            )
+        )
 
     result.update(exec_result)
 
